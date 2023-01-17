@@ -3,8 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
+	"os"
+
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 type Employee struct {
@@ -13,12 +17,6 @@ type Employee struct {
 	Department string `json:"speciality"`
 	ProjectID  int    `json:"-"`
 }
-
-// func (e Employee) MarshalJSON() ([]byte, error) {
-// 	jsonString := fmt.Sprintf(`{"id": %d, "name": "%s", "speciality": "%s"}`, e.ID, e.Name, e.Department)
-
-// 	return []byte(jsonString), nil
-// }
 
 var employees = []Employee{
 	{1, "Gaurav", "LnD", 1001},
@@ -29,7 +27,13 @@ var employees = []Employee{
 func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
 	var newEmp Employee
 	decoder := json.NewDecoder(req.Body)
-	decoder.Decode(&newEmp)
+	err := decoder.Decode(&newEmp)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, err)
+		return
+	}
 
 	newEmp.ID = len(employees) + 1
 
@@ -45,16 +49,20 @@ func EmployeesIndexHandler(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(employees)
 }
 
-func EmployeesHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method == "POST" {
-		EmployeeCreateHandler(w, req)
-	} else {
-		EmployeesIndexHandler(w, req)
-	}
-}
+// func LoggingMiddleware(next http.Handler) http.Handler {
+// 	handler := func(w http.ResponseWriter, req *http.Request) {
+// 		begin := time.Now()
+
+// 		next.ServeHTTP(w, req)
+
+// 		log.Infof("%s %s took %s\n", req.Method, req.URL, time.Since(begin))
+// 	}
+
+// 	return http.HandlerFunc(handler)
+// }
 
 func main() {
-	r := http.NewServeMux()
+	r := mux.NewRouter()
 
 	r.HandleFunc("/hello", func(w http.ResponseWriter, req *http.Request) {
 		msg := "Hello, World!" // Type: string
@@ -62,12 +70,12 @@ func main() {
 		fmt.Fprintln(w, msg)
 	})
 
-	r.HandleFunc("/employees", EmployeesHandler)
+	r.HandleFunc("/employees", EmployeesIndexHandler).Methods("GET")
+	r.HandleFunc("/employees", EmployeeCreateHandler).Methods("POST")
 
-	// r.HandleFunc("/employees", EmployeesIndexHandler)
-	// r.HandleFunc("/employees", EmployeeCreateHandler)
-
-	err := http.ListenAndServe("localhost:8000", r)
+	log.Info("Starting the server on port: 8000...")
+	// err := http.ListenAndServe("localhost:8000", LoggingMiddleware(r))
+	err := http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
 
 	log.Fatal(err)
 }
