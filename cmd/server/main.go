@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,50 +9,10 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
+	empHTTP "algogrit.com/emp_server/employees/http"
 	"algogrit.com/emp_server/employees/repository"
 	"algogrit.com/emp_server/employees/service"
-	"algogrit.com/emp_server/entities"
 )
-
-var empRepo = repository.NewInMem()
-var empSvc = service.NewV1(empRepo)
-
-func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
-	var newEmp entities.Employee
-	decoder := json.NewDecoder(req.Body)
-	err := decoder.Decode(&newEmp)
-
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, err)
-		return
-	}
-
-	savedEmp, err := empSvc.Create(req.Context(), newEmp)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(savedEmp)
-}
-
-func EmployeesIndexHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	emps, err := empSvc.Index(req.Context())
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err)
-		return
-	}
-
-	json.NewEncoder(w).Encode(emps)
-}
 
 // func LoggingMiddleware(next http.Handler) http.Handler {
 // 	handler := func(w http.ResponseWriter, req *http.Request) {
@@ -76,8 +35,11 @@ func main() {
 		fmt.Fprintln(w, msg)
 	})
 
-	r.HandleFunc("/employees", EmployeesIndexHandler).Methods("GET")
-	r.HandleFunc("/employees", EmployeeCreateHandler).Methods("POST")
+	var empRepo = repository.NewInMem()
+	var empSvc = service.NewV1(empRepo)
+	var empHandler = empHTTP.New(empSvc)
+
+	empHandler.SetupRoutes(r)
 
 	log.Info("Starting the server on port: 8000...")
 	// err := http.ListenAndServe("localhost:8000", LoggingMiddleware(r))
