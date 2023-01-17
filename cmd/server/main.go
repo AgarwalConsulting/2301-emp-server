@@ -10,14 +10,11 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
+	"algogrit.com/emp_server/employees/repository"
 	"algogrit.com/emp_server/entities"
 )
 
-var employees = []entities.Employee{
-	{1, "Gaurav", "LnD", 1001},
-	{2, "Prathyash", "Cloud", 10001},
-	{3, "Anita", "SRE", 20001},
-}
+var empRepo = repository.NewInMem()
 
 func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
 	var newEmp entities.Employee
@@ -30,18 +27,30 @@ func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	newEmp.ID = len(employees) + 1
+	savedEmp, err := empRepo.Save(newEmp)
 
-	employees = append(employees, newEmp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(newEmp)
+	json.NewEncoder(w).Encode(savedEmp)
 }
 
 func EmployeesIndexHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(employees)
+	emps, err := empRepo.ListAll()
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, err)
+		return
+	}
+
+	json.NewEncoder(w).Encode(emps)
 }
 
 // func LoggingMiddleware(next http.Handler) http.Handler {
