@@ -9,23 +9,18 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+
+	"algogrit.com/emp_server/entities"
 )
 
-type Employee struct {
-	ID         int    `json:"id"` // Struct Tags
-	Name       string `json:"name"`
-	Department string `json:"speciality"`
-	ProjectID  int    `json:"-"`
-}
-
-var employees = []Employee{
+var employees = []entities.Employee{
 	{1, "Gaurav", "LnD", 1001},
 	{2, "Prathyash", "Cloud", 10001},
 	{3, "Anita", "SRE", 20001},
 }
 
 func EmployeeCreateHandler(w http.ResponseWriter, req *http.Request) {
-	var newEmp Employee
+	var newEmp entities.Employee
 	decoder := json.NewDecoder(req.Body)
 	err := decoder.Decode(&newEmp)
 
