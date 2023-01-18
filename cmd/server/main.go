@@ -39,8 +39,8 @@ func main() {
 		fmt.Fprintln(w, msg)
 	})
 
-	// var empRepo = repository.NewInMem()
-	var empRepo = repository.NewSQL("postgres", "postgresql://localhost:5432/emp-demo?sslmode=disable")
+	var empRepo = repository.NewInMem()
+	// var empRepo = repository.NewSQL("postgres", "postgresql://localhost:5432/emp-demo?sslmode=disable")
 	var empSvc = service.NewV1(empRepo)
 	var empHandler = empHTTP.New(empSvc)
 
