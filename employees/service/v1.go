@@ -14,6 +14,7 @@ type v1 struct {
 func (svc *v1) Index(ctx context.Context) ([]entities.Employee, error) {
 	return svc.repo.ListAll()
 }
+
 func (svc *v1) Create(ctx context.Context, newEmp entities.Employee) (*entities.Employee, error) {
 	return svc.repo.Save(newEmp)
 }
