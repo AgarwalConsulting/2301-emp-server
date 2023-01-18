@@ -1,2 +1,3 @@
 mock_*.go
 testdata/
+test.cover

@@ -1,16 +1,27 @@
 package repository
 
-import "algogrit.com/emp_server/entities"
+import (
+	"sync"
+
+	"algogrit.com/emp_server/entities"
+)
 
 type inmem struct {
 	employees []entities.Employee
+	mut       *sync.RWMutex
 }
 
 func (repo *inmem) ListAll() ([]entities.Employee, error) {
+	repo.mut.RLock() // Exclusive for Writing (allows multiple readers)
+	defer repo.mut.RUnlock()
+
 	return repo.employees, nil
 }
 
 func (repo *inmem) Save(newEmp entities.Employee) (*entities.Employee, error) {
+	repo.mut.Lock() // Exclusive for Writing & Reading (doesn't allow anyone else)
+	defer repo.mut.Unlock()
+
 	newEmp.ID = len(repo.employees) + 1
 
 	repo.employees = append(repo.employees, newEmp)
@@ -25,5 +36,5 @@ func NewInMem() EmployeeRepository {
 		{3, "Anita", "SRE", 20001},
 	}
 
-	return &inmem{employees}
+	return &inmem{employees, &sync.RWMutex{}}
 }
