@@ -14,17 +14,21 @@ import (
 	"algogrit.com/emp_server/employees/service"
 )
 
-// func LoggingMiddleware(next http.Handler) http.Handler {
-// 	handler := func(w http.ResponseWriter, req *http.Request) {
-// 		begin := time.Now()
+func envOrDefault(key, dfltVal string) string {
+	val, ok := os.LookupEnv(key)
 
-// 		next.ServeHTTP(w, req)
+	if !ok {
+		return dfltVal
+	}
 
-// 		log.Infof("%s %s took %s\n", req.Method, req.URL, time.Since(begin))
-// 	}
+	return val
+}
 
-// 	return http.HandlerFunc(handler)
-// }
+var port string = "8000"
+
+func init() {
+	port = envOrDefault("PORT", port)
+}
 
 func main() {
 	r := mux.NewRouter()
@@ -41,9 +45,9 @@ func main() {
 
 	empHandler.SetupRoutes(r)
 
-	log.Info("Starting the server on port: 8000...")
+	log.Infof("Starting the server on port: %s...", port)
 	// err := http.ListenAndServe("localhost:8000", LoggingMiddleware(r))
-	err := http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, r))
+	err := http.ListenAndServe(":"+port, handlers.LoggingHandler(os.Stdout, r))
 
 	log.Fatal(err)
 }
