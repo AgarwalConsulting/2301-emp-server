@@ -86,27 +86,27 @@ func TestCreateV1(t *testing.T) {
 	assert.Equal(t, createdEmp, actualEmp)
 }
 
-// func FuzzCreateV1(f *testing.F) {
-// 	f.Add(`{"name": "Gaurav", "speciality": "LnD"`)
-// 	f.Add(`2312tsgfas`)
+func FuzzCreateV1(f *testing.F) {
+	f.Add(`{"name": "Gaurav", "speciality": "LnD"`)
+	f.Add(`2312tsgfas`)
 
-// 	f.Fuzz(func(t *testing.T, jsonBody string) {
-// 		ctrl := gomock.NewController(t)
-// 		defer ctrl.Finish()
+	f.Fuzz(func(t *testing.T, jsonBody string) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
 
-// 		mockSvc := service.NewMockEmployeeService(ctrl)
+		mockSvc := service.NewMockEmployeeService(ctrl)
 
-// 		sut := empHTTP.New(mockSvc)
+		sut := empHTTP.New(mockSvc)
 
-// 		reqBody := strings.NewReader(jsonBody)
+		reqBody := strings.NewReader(jsonBody)
 
-// 		req := httptest.NewRequest("POST", "/v1/employees", reqBody)
-// 		respRec := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/v1/employees", reqBody)
+		respRec := httptest.NewRecorder()
 
-// 		sut.ServeHTTP(respRec, req)
+		sut.ServeHTTP(respRec, req)
 
-// 		resp := respRec.Result()
+		resp := respRec.Result()
 
-// 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-// 	})
-// }
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
+}
